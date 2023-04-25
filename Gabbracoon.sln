@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GabbracoonServer", "GabbracoonServer\GabbracoonServer.csproj", "{A3CDF3E1-7AA0-418B-82A2-2DA361505952}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gabbracoon", "Gabbracoon\Gabbracoon.csproj", "{E3C3CC36-DA28-4700-ACF6-8A228043846C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Features", "Features", "{4A6E9483-D86A-4EFB-9CD7-546E3B31CF61}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PasswordAuth", "Features\PasswordAuth\PasswordAuth.csproj", "{E306AF93-45A0-4877-A0DF-1099CD8CD19F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OAuth", "Features\OAuth\OAuth.csproj", "{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestModels", "RequestModels\RequestModels.csproj", "{9270AE82-23D4-48A3-9095-997F34A4E6C9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A3CDF3E1-7AA0-418B-82A2-2DA361505952}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3CDF3E1-7AA0-418B-82A2-2DA361505952}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3CDF3E1-7AA0-418B-82A2-2DA361505952}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3CDF3E1-7AA0-418B-82A2-2DA361505952}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3C3CC36-DA28-4700-ACF6-8A228043846C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3C3CC36-DA28-4700-ACF6-8A228043846C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3C3CC36-DA28-4700-ACF6-8A228043846C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3C3CC36-DA28-4700-ACF6-8A228043846C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E306AF93-45A0-4877-A0DF-1099CD8CD19F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E306AF93-45A0-4877-A0DF-1099CD8CD19F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E306AF93-45A0-4877-A0DF-1099CD8CD19F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E306AF93-45A0-4877-A0DF-1099CD8CD19F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9270AE82-23D4-48A3-9095-997F34A4E6C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9270AE82-23D4-48A3-9095-997F34A4E6C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9270AE82-23D4-48A3-9095-997F34A4E6C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9270AE82-23D4-48A3-9095-997F34A4E6C9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E306AF93-45A0-4877-A0DF-1099CD8CD19F} = {4A6E9483-D86A-4EFB-9CD7-546E3B31CF61}
+		{1A2DA439-EA64-457B-BEA7-7525CCBB99F6} = {4A6E9483-D86A-4EFB-9CD7-546E3B31CF61}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {92A56C7A-4624-458A-B0EB-99A6DDBD390B}
+	EndGlobalSection
+EndGlobal
