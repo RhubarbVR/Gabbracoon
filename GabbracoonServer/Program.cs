@@ -1,8 +1,11 @@
 using System;
+using System.Net.Mail;
+using System.Net;
 
 using Cassandra;
 
 using Gabbracoon;
+using Gabbracoon.Email;
 
 using GabbracoonServer.Controllers;
 
@@ -19,20 +22,44 @@ namespace GabbracoonServer
 	{
 		public static void Main(string[] args) {
 			var builder = WebApplication.CreateBuilder(args);
+			var configuration = builder.Configuration;
 
 			//Config
-			var generatorID = 0;
-			var targetCassandraServices = new List<string> {
+			var serverID = configuration.GetValue<int?>("serverID") ?? 0;
+			var targetCassandraNodes = configuration.GetValue<string[]>("targetCassandraNodes") ?? new string[] {
 				"localhost"
 			};
-			var cassandraSSl = false;
+			var cassandraSSl = configuration.GetValue<bool?>("cassandraSSl") ??false;
+			var emailerName = configuration.GetValue<string>("emailerName");
+			var emailerPassword = configuration.GetValue<string>("emailerPassword");
+			var emailerHost = configuration.GetValue<string>("emailerHost");
+			var emailerPort = configuration.GetValue<int?>("emailerPort") ?? 587;
+			var emailerSsl = configuration.GetValue<bool?>("emailerSsl") ?? true;
 
-			builder.Services.AddIdGen(generatorID, () => new IdGeneratorOptions(IdStructure.Default, new DefaultTimeSource(new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc)), SequenceOverflowStrategy.SpinWait));
-			var database = new CassandraService(null, cassandraSSl, targetCassandraServices);
+			builder.Services.AddIdGen(serverID, () => new IdGeneratorOptions(IdStructure.Default, new DefaultTimeSource(new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc)), SequenceOverflowStrategy.SpinWait));
+			var database = new CassandraService(null, cassandraSSl, targetCassandraNodes);
 			database.DatabaseSession.CreateKeyspaceIfNotExists("GabbracoonDB");
 			database.DatabaseSession.ChangeKeyspace("GabbracoonDB");
 			builder.Services.AddSingleton<ICassandraService>(database);
-			builder.Services.AddScoped<IUserAndAuthService,UserAndAuthService>();
+			builder.Services.AddScoped<IUserAndAuthService, UserAndAuthService>();
+
+			IEmailer emailer;
+			try {
+				emailer = new SmtpEmailer(new SmtpClient() {
+					Credentials = new NetworkCredential(emailerName, emailerPassword),
+					Host = emailerHost,
+					Port = emailerPort,
+					EnableSsl = emailerSsl,
+					DeliveryMethod = SmtpDeliveryMethod.Network,
+					UseDefaultCredentials = false,
+				}, emailerName);
+			}
+			catch (Exception e) {
+				Console.WriteLine($"Emailer Failed Now using nullemailer Error:{e}");
+				emailer = new NullEmailer();
+			}
+			builder.Services.AddSingleton(emailer);
+			builder.Services.AddTransient<IGabbracoonAuthProvider, EmailAuthProvider>();
 
 			//Load Versioning table
 			database.DatabaseSession.LoadVersioningTable();

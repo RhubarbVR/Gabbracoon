@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 using Cassandra;
 
 using IdGen;
+
+using RequestModels;
 
 using RhubarbServerNode.Database;
 
@@ -32,13 +35,12 @@ namespace Gabbracoon
 		}
 
 		private static (byte R, byte G, byte B) HSVToRGB(float h, float s, float v) {
-			var hi = Convert.ToInt32(Math.Floor(h * 6)) % 6;
 			var f = (h * 6) - (float)Math.Floor(h * 6);
 			var p = (byte)(v * 255 * (1 - s));
 			var q = (byte)(v * 255 * (1 - (f * s)));
 			var t = (byte)(v * 255 * (1 - ((1 - f) * s)));
 			var vByte = (byte)(v * 255);
-			return hi switch {
+			return (Convert.ToInt32(Math.Floor(h * 6)) % 6) switch {
 				0 => (vByte, t, p),
 				1 => (q, vByte, p),
 				2 => (p, vByte, t),
@@ -50,7 +52,7 @@ namespace Gabbracoon
 
 		public async Task<bool> CheckIfEmailClamed(string email, CancellationToken cancellationToken) {
 			cancellationToken.ThrowIfCancellationRequested();
-			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT * FROM users WHERE email = ?;");
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT username FROM users WHERE email = ?;");
 			cancellationToken.ThrowIfCancellationRequested();
 			var boundStatement = preparedStatement.Bind(email);
 			cancellationToken.ThrowIfCancellationRequested();
@@ -58,15 +60,60 @@ namespace Gabbracoon
 			return result.FirstOrDefault() is not null;
 		}
 
+		public async Task<long?> GetUserIDFromEmail(string email, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT id FROM users WHERE email = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(email);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			return result.FirstOrDefault()?.GetValue<long>("id");
+		}
+
+		public async IAsyncEnumerable<(MissingAuth auth, int group)> GetAuths(long targetUser, [EnumeratorCancellation] CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT * FROM auth_providers WHERE target_user = ?;");
+			var boundStatement = preparedStatement.Bind(targetUser);
+			cancellationToken.ThrowIfCancellationRequested();
+			var rows = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			cancellationToken.ThrowIfCancellationRequested();
+			foreach (var row in rows) {
+				yield return (new MissingAuth {
+					AuthProviderType = row.GetValue<string>("provider_type"),
+					SessionToken = row.GetValue<bool>("session_key"),
+					TargetToken = row.GetValue<long>("id")
+				}, row.GetValue<int>("auth_group"));
+			}
+		}
+
+		public async Task SetAuthProvidersPrivateData(long targetProvider, string newValue, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO auth_providers (id, private_data) VALUES (?, ?); ");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(targetProvider, newValue);
+			cancellationToken.ThrowIfCancellationRequested();
+			await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+		}
+
+		public async Task<string> GetAuthProvidersPrivateData(long targetProvider, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT private_data FROM auth_providers WHERE id = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(targetProvider);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			return result.FirstOrDefault()?.GetValue<string>("private_data");
+		}
+
 		public async Task<long> CreateAccount(string email, string username, CancellationToken cancellationToken) {
 			cancellationToken.ThrowIfCancellationRequested();
-			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO users (id, username, email, player_color, total_bytes, total_used_bytes) VALUES (?, ?, ?, ?, ?, ?); ");
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO users (id, username, email, player_color, total_bytes, total_used_bytes, has_login) VALUES (?, ?, ?, ?, ?, ?, ?); ");
 			cancellationToken.ThrowIfCancellationRequested();
 			var newUserID = _idGen.CreateId();
 			cancellationToken.ThrowIfCancellationRequested();
 			var randomColor = GenerateRandomColorHue();
 			cancellationToken.ThrowIfCancellationRequested();
-			var boundStatement = preparedStatement.Bind(newUserID, username, email, randomColor, 0L,0L);
+			var boundStatement = preparedStatement.Bind(newUserID, username, email, randomColor, 0L, 0L, false);
 			await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
 
 			var newAuthID = _idGen.CreateId();
@@ -75,6 +122,33 @@ namespace Gabbracoon
 			await _cassandraService.DatabaseSession.ExecuteAsync(authBoundStatement);
 
 			return newUserID;
+		}
+
+		public async Task MarkUserHasLogin(long id, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO users (id, has_login) VALUES (?, ?); ");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(id, true);
+			await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+		}
+
+		public async Task<(PrivateUserData user, bool hasLogin)> GetUser(long id, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT * FROM users WHERE id = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(id);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			var resultData = result.FirstOrDefault();
+			var user = resultData is null
+				? null
+				: new PrivateUserData {
+					PlayerColor = resultData.GetValue<int>("player_color"),
+					Username = resultData.GetValue<string>("username"),
+					TotalBytes = resultData.GetValue<long>("total_bytes"),
+					TotalUsedBytes = resultData.GetValue<long>("total_used_bytes"),
+				};
+			return (user, resultData?.GetValue<bool>("has_login") ?? false);
 		}
 	}
 }

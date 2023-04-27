@@ -8,7 +8,7 @@ namespace OAuth
 	{
 		public string Name => "OAuth";
 
-		public Task<long> AddAuthenticate(long TargetUser, CancellationToken cancellationToken) {
+		public Task<long> AddAuthenticate(long TargetUser, string extraData, CancellationToken cancellationToken) {
 			throw new NotImplementedException();
 		}
 
@@ -20,7 +20,7 @@ namespace OAuth
 			throw new NotImplementedException();
 		}
 
-		public Task ReqwestAuthenticate(long TargetToken, CancellationToken cancellationToken) {
+		public Task RequestAuthenticate(long TargetToken, CancellationToken cancellationToken) {
 			throw new NotImplementedException();
 		}
 	}

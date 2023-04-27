@@ -8,7 +8,7 @@ namespace PasswordAuth
 	{
 		public string Name => "Password";
 
-		public Task<long> AddAuthenticate(long TargetUser, CancellationToken cancellationToken) {
+		public Task<long> AddAuthenticate(long TargetUser, string extraData, CancellationToken cancellationToken) {
 			throw new NotImplementedException();
 		}
 
@@ -20,7 +20,7 @@ namespace PasswordAuth
 			throw new NotImplementedException();
 		}
 
-		public Task ReqwestAuthenticate(long TargetToken, CancellationToken cancellationToken) {
+		public Task RequestAuthenticate(long TargetToken, CancellationToken cancellationToken) {
 			throw new NotImplementedException();
 		}
 	}

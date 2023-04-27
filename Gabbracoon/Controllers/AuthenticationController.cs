@@ -1,10 +1,12 @@
-﻿using Cassandra;
+﻿using System.Linq;
+
+using Cassandra;
 
 using Gabbracoon;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Linq;
 using RequestModels;
 
 namespace GabbracoonServer.Controllers
@@ -13,11 +15,11 @@ namespace GabbracoonServer.Controllers
 	[Route("[controller]")]
 	public class AuthenticationController : ControllerBase
 	{
-		private readonly Gabbracoon.IGabbracoonAuthProvider[] _authProviders = Array.Empty<Gabbracoon.IGabbracoonAuthProvider>();
+		private readonly Dictionary<string, IGabbracoonAuthProvider> _authProviders = new();
 		private readonly IUserAndAuthService _userAndAuthService;
 
 		public AuthenticationController(IEnumerable<Gabbracoon.IGabbracoonAuthProvider> authProviders, IUserAndAuthService userAndAuthService) {
-			_authProviders = authProviders.ToArray();
+			_authProviders = authProviders.ToDictionary((x) => x.Name);
 			_userAndAuthService = userAndAuthService;
 		}
 
@@ -25,21 +27,64 @@ namespace GabbracoonServer.Controllers
 		[ProducesResponseType(typeof(LocalText), StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
 		public async Task<IActionResult> Authinticate(AuthRequest request, CancellationToken cancellationToken) {
-			foreach (var provider in _authProviders) {
-				if (provider.Name == request.TargetProvider) {
-					if (await provider.Authenticate(request, cancellationToken)) {
+			if (_authProviders.TryGetValue(request.TargetProvider, out var provider)) {
+				if (await provider.Authenticate(request, cancellationToken)) {
 
-					}
+					return Ok(new AuthResponse());
 				}
 			}
 			return BadRequest(new LocalText("Server.Authinticate.Failed"));
 		}
 
-		[HttpGet(nameof(Login))]
+		[HttpPost(nameof(Login))]
+		[ProducesResponseType(typeof(LocalText), StatusCodes.Status409Conflict)]
 		[ProducesResponseType(typeof(PrivateUserData), StatusCodes.Status202Accepted)]
-		[ProducesResponseType(typeof(MissingAuth), StatusCodes.Status100Continue)]
-		public IActionResult Login([FromForm(Name = "Email")] string email) {
-			return Accepted();
+		[ProducesResponseType(typeof(MissingAuth), StatusCodes.Status200OK)]
+		public async Task<IActionResult> Login([FromForm(Name = "Email")] string email, [FromForm(Name = "AuthGroup")] int? authGroup, CancellationToken cancellationToken) {
+			if(email is null || authGroup is null) {
+				return Conflict(new LocalText("Server.Error"));
+			}
+			var findUser = await _userAndAuthService.GetUserIDFromEmail(email, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+			if (findUser is null) {
+				return Conflict(new LocalText("Server.Error"));
+			}
+			var authTokens = new Dictionary<long, string>();
+			if (Request.Headers.TryGetValue("RhubarbAuths", out var value)) {
+				authTokens = value.ToDictionary((inputString) => long.Parse(inputString.Remove(inputString.IndexOf(' '))));
+			}
+			MissingAuth authProviders = null;
+			var hadToken = false;
+			await foreach (var auth in _userAndAuthService.GetAuths(findUser ?? 0, cancellationToken)) {
+				if (auth.group != authGroup) {
+					if (authTokens.ContainsKey(auth.auth.TargetToken)) {
+						return Conflict(new LocalText("Server.Error.DullLogin"));
+					}
+					continue;
+				}
+				else {
+					if (authTokens.TryGetValue(auth.auth.TargetToken, out var token)) {
+						hadToken = true;
+						//verify Token then continue
+						continue;
+					}
+				}
+				authProviders ??= auth.auth;
+			}
+			cancellationToken.ThrowIfCancellationRequested();
+			if (authProviders is null) {
+				return hadToken
+					? Accepted(await _userAndAuthService.GetUser(findUser ?? 0, cancellationToken))
+					: Conflict(new LocalText("Server.Error"));
+			}
+			if (_authProviders.TryGetValue(authProviders.AuthProviderType, out var provider)) {
+				await provider.RequestAuthenticate(authProviders.TargetToken, cancellationToken);
+				return Ok(authProviders);
+			}
+			else {
+				return Conflict(new LocalText("Server.Error"));
+			}
+
 		}
 
 		[HttpGet(nameof(RefreshTokens))]

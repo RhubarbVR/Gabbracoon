@@ -11,6 +11,5 @@ namespace RequestModels
 		public int PlayerColor { get; set; }
 		public long TotalBytes { get; set; }
 		public long TotalUsedBytes { get; set; }
-		public DateTimeOffset CreationDate { get; set; }
 	}
 }

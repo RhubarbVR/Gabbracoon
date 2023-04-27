@@ -35,7 +35,8 @@ namespace GabbracoonServer
 					email TEXT,
 					player_color INT,
 					total_bytes BIGINT,
-					total_used_bytes BIGINT
+					total_used_bytes BIGINT,
+					has_login BOOLEAN
 				);");
 
 			database.Execute("CREATE INDEX users_emails ON users ( email );");
