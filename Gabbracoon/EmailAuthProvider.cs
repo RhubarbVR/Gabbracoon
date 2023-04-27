@@ -24,7 +24,7 @@ namespace Gabbracoon
 
 		public string Name => "EmailAuth";
 
-		public Task<long> AddAuthenticate(long TargetUser, string extraData, CancellationToken cancellationToken) {
+		public Task<long> AddAuthenticate(long TargetUser, string email, CancellationToken cancellationToken) {
 			throw new NotImplementedException();
 		}
 
@@ -40,12 +40,18 @@ namespace Gabbracoon
 					return false;
 				}
 				var loginCode = token.Remove(seprateLocation);
-				var dateStamp = token.Substring(seprateLocation);
-				return long.TryParse(dateStamp, out var ticks)
+				var dateStamp = token.Substring(seprateLocation + 1);
+				if (long.TryParse(dateStamp, out var ticks)
 										&&
-					DateTime.UtcNow.AddMinutes(3) < new DateTime(ticks, DateTimeKind.Utc) 
+					DateTime.UtcNow < new DateTime(ticks, DateTimeKind.Utc).AddMinutes(3)
 										&&
-					loginCode == request.AuthCode;
+					loginCode == request.AuthCode) {
+					await _userAndAuthService.SetAuthProvidersPrivateData(request.TargetToken, null, cancellationToken);
+					return true;
+				}
+				else {
+					return false;
+				}
 			}
 			catch {
 				return false;
@@ -58,9 +64,11 @@ namespace Gabbracoon
 
 		public async Task RequestAuthenticate(long TargetToken, CancellationToken cancellationToken) {
 			cancellationToken.ThrowIfCancellationRequested();
+			var targetUserID = await _userAndAuthService.GetAuthProvidersUser(TargetToken, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
 			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT email FROM users WHERE id = ?;");
 			cancellationToken.ThrowIfCancellationRequested();
-			var boundStatement = preparedStatement.Bind(TargetToken);
+			var boundStatement = preparedStatement.Bind(targetUserID);
 			cancellationToken.ThrowIfCancellationRequested();
 			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
 			var targetEmail = result.FirstOrDefault()?.GetValue<string>("email");

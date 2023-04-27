@@ -29,8 +29,11 @@ namespace GabbracoonServer.Controllers
 		public async Task<IActionResult> Authinticate(AuthRequest request, CancellationToken cancellationToken) {
 			if (_authProviders.TryGetValue(request.TargetProvider, out var provider)) {
 				if (await provider.Authenticate(request, cancellationToken)) {
-
-					return Ok(new AuthResponse());
+					return Ok(new AuthResponse {
+						TargetToken = request.TargetToken,
+						SessionToken = await _userAndAuthService.GetAuthProvidersIsSessionToken(request.TargetToken, cancellationToken) ?? false,
+						AuthToken = await _userAndAuthService.GetNewAuthToken(request.TargetToken, cancellationToken),
+					});
 				}
 			}
 			return BadRequest(new LocalText("Server.Authinticate.Failed"));
@@ -41,7 +44,7 @@ namespace GabbracoonServer.Controllers
 		[ProducesResponseType(typeof(PrivateUserData), StatusCodes.Status202Accepted)]
 		[ProducesResponseType(typeof(MissingAuth), StatusCodes.Status200OK)]
 		public async Task<IActionResult> Login([FromForm(Name = "Email")] string email, [FromForm(Name = "AuthGroup")] int? authGroup, CancellationToken cancellationToken) {
-			if(email is null || authGroup is null) {
+			if (email is null || authGroup is null) {
 				return Conflict(new LocalText("Server.Error"));
 			}
 			var findUser = await _userAndAuthService.GetUserIDFromEmail(email, cancellationToken);
@@ -73,12 +76,19 @@ namespace GabbracoonServer.Controllers
 			}
 			cancellationToken.ThrowIfCancellationRequested();
 			if (authProviders is null) {
-				return hadToken
-					? Accepted(await _userAndAuthService.GetUser(findUser ?? 0, cancellationToken))
-					: Conflict(new LocalText("Server.Error"));
+				if (hadToken) {
+					var (user, hasLogin) = await _userAndAuthService.GetUser(findUser ?? 0, cancellationToken);
+					if (!hasLogin) {
+						//Todo call userData load on fetures
+						await _userAndAuthService.MarkUserHasLogin(findUser ?? 0, cancellationToken);
+					}
+					return Accepted(user);
+				}
+				return Conflict(new LocalText("Server.Error"));
 			}
 			if (_authProviders.TryGetValue(authProviders.AuthProviderType, out var provider)) {
 				await provider.RequestAuthenticate(authProviders.TargetToken, cancellationToken);
+				Console.WriteLine($"Code {authProviders.TargetToken}");
 				return Ok(authProviders);
 			}
 			else {

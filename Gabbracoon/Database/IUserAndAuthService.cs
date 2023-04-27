@@ -11,6 +11,11 @@ namespace Gabbracoon
 {
 	public interface IUserAndAuthService
 	{
+
+		public Task<bool?> GetAuthProvidersIsSessionToken(long targetProvider, CancellationToken cancellationToken);
+
+		public Task<long?> GetAuthProvidersUser(long targetProvider, CancellationToken cancellationToken);
+
 		public Task SetAuthProvidersPrivateData(long targetProvider, string newValue, CancellationToken cancellationToken);
 		
 		public Task<string> GetAuthProvidersPrivateData(long targetProvider, CancellationToken cancellationToken);
@@ -26,5 +31,6 @@ namespace Gabbracoon
 		public Task<bool> CheckIfEmailClamed(string email, CancellationToken cancellationToken);
 
 		public Task<long> CreateAccount(string email, string username, CancellationToken cancellationToken);
+		public Task<string> GetNewAuthToken(long targetToken, CancellationToken cancellationToken);
 	}
 }

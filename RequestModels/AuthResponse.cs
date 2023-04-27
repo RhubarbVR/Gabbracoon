@@ -1,12 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text.Json.Serialization;
 
 namespace RequestModels
 {
 	public sealed class AuthResponse
 	{
-		public ulong TargetToken { get; set; }
+		public string TargetTokenAsString { get; set; }
+	
+		[JsonIgnore]
+		public long TargetToken
+		{
+			get => long.Parse(TargetTokenAsString);
+			set => TargetTokenAsString = value.ToString();
+		}
+
 		public bool SessionToken { get; set; }
 		public string AuthToken { get; set; }
 	}

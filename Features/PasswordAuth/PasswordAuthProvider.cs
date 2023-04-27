@@ -8,7 +8,7 @@ namespace PasswordAuth
 	{
 		public string Name => "Password";
 
-		public Task<long> AddAuthenticate(long TargetUser, string extraData, CancellationToken cancellationToken) {
+		public Task<long> AddAuthenticate(long TargetUser, string password, CancellationToken cancellationToken) {
 			throw new NotImplementedException();
 		}
 

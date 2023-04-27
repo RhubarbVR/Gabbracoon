@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
 using Cassandra;
 
 using IdGen;
+
+using JWT.Algorithms;
+using JWT.Builder;
 
 using RequestModels;
 
@@ -95,6 +99,17 @@ namespace Gabbracoon
 			await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
 		}
 
+		public async Task<long?> GetAuthProvidersUser(long targetProvider, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT target_user FROM auth_providers WHERE id = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(targetProvider);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			return result.FirstOrDefault()?.GetValue<long>("target_user");
+		}
+
+
 		public async Task<string> GetAuthProvidersPrivateData(long targetProvider, CancellationToken cancellationToken) {
 			cancellationToken.ThrowIfCancellationRequested();
 			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT private_data FROM auth_providers WHERE id = ?;");
@@ -149,6 +164,31 @@ namespace Gabbracoon
 					TotalUsedBytes = resultData.GetValue<long>("total_used_bytes"),
 				};
 			return (user, resultData?.GetValue<bool>("has_login") ?? false);
+		}
+
+		public async Task<bool?> GetAuthProvidersIsSessionToken(long targetProvider, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT session_key FROM auth_providers WHERE id = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(targetProvider);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			return result.FirstOrDefault()?.GetValue<bool>("session_key");
+		}
+
+		public async Task<string> GetNewAuthToken(long targetToken, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var userID = await GetAuthProvidersUser(targetToken, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+			//add certificate
+			var token = JwtBuilder.Create()
+					  .WithAlgorithm(new RS256Algorithm(new X509Certificate2("","")))
+					  .AddClaim("exp", DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds())
+					  .AddClaim("userID", userID)
+					  .AddClaim("rollingID", 0)
+					  .AddClaim("","")
+					  .Encode();
+			return token;
 		}
 	}
 }
