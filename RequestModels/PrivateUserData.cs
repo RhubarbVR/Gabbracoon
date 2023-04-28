@@ -13,8 +13,8 @@ namespace RequestModels
 		[JsonIgnore]
 		public long UserId
 		{
-			get => long.Parse(UserIdAsString);
-			set => UserIdAsString = value.ToString();
+			get => BitConverter.ToInt64(Convert.FromBase64String(UserIdAsString), 0);
+			set => UserIdAsString = Convert.ToBase64String(BitConverter.GetBytes(value));
 		}
 
 		public string Username { get; set; }

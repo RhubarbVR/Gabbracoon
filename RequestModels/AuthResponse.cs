@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace RequestModels
 {
@@ -9,8 +10,8 @@ namespace RequestModels
 		[JsonIgnore]
 		public long TargetToken
 		{
-			get => long.Parse(TargetTokenAsString);
-			set => TargetTokenAsString = value.ToString();
+			get => BitConverter.ToInt64(Convert.FromBase64String(TargetTokenAsString), 0);
+			set => TargetTokenAsString = Convert.ToBase64String(BitConverter.GetBytes(value));
 		}
 
 		public bool SessionToken { get; set; }
