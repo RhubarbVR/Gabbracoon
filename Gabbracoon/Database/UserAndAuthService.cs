@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 using Cassandra;
 
+using Gabbracoon.Certificate;
+
 using IdGen;
 
 using JWT.Algorithms;
@@ -23,10 +25,12 @@ namespace Gabbracoon
 	{
 		private readonly ICassandraService _cassandraService;
 		private readonly IIdGenerator<long> _idGen;
+		private readonly IX509CertificateManager _x509CertificateManager;
 
-		public UserAndAuthService(ICassandraService cassandraService, IIdGenerator<long> idGen) {
+		public UserAndAuthService(ICassandraService cassandraService, IIdGenerator<long> idGen, IX509CertificateManager x509CertificateManager) {
 			_cassandraService = cassandraService;
 			_idGen = idGen;
+			_x509CertificateManager = x509CertificateManager;
 		}
 
 
@@ -180,13 +184,13 @@ namespace Gabbracoon
 			cancellationToken.ThrowIfCancellationRequested();
 			var userID = await GetAuthProvidersUser(targetToken, cancellationToken);
 			cancellationToken.ThrowIfCancellationRequested();
-			//add certificate
+
 			var token = JwtBuilder.Create()
-					  .WithAlgorithm(new RS256Algorithm(new X509Certificate2("","")))
+					  .WithAlgorithm(new RS256Algorithm(_x509CertificateManager.Certificate))
 					  .AddClaim("exp", DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds())
 					  .AddClaim("userID", userID)
 					  .AddClaim("rollingID", 0)
-					  .AddClaim("","")
+					  .AddClaim("authToken", targetToken)
 					  .Encode();
 			return token;
 		}

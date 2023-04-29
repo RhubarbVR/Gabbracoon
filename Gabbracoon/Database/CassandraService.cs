@@ -53,7 +53,7 @@ namespace RhubarbServerNode.Database
 
 		public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) {
 			try {
-				var rowSet = await DatabaseSession.ExecuteAsync(new SimpleStatement("SELECT now() FROM system.local;"));
+				await DatabaseSession.ExecuteAsync(new SimpleStatement("SELECT now() FROM system.local;"));
 				return HealthCheckResult.Healthy();
 			}
 			catch (Exception ex) {

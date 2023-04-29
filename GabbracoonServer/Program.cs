@@ -15,6 +15,7 @@ using IdGen.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
 using RhubarbServerNode.Database;
+using Gabbracoon.Certificate;
 
 namespace GabbracoonServer
 {
@@ -35,7 +36,15 @@ namespace GabbracoonServer
 			var emailerHost = configuration.GetValue<string>("emailerHost");
 			var emailerPort = configuration.GetValue<int?>("emailerPort") ?? 587;
 			var emailerSsl = configuration.GetValue<bool?>("emailerSsl") ?? true;
+			var permLocation = configuration.GetValue<string>("permLocation") ?? "Gabbracoon.pem";
 
+
+
+			var certificate = new X509CertificateManager {
+				CertificateLocation = permLocation
+			};
+			certificate.UpdateCertificate();
+			builder.Services.AddSingleton<IX509CertificateManager>(certificate);
 			builder.Services.AddIdGen(serverID, () => new IdGeneratorOptions(IdStructure.Default, new DefaultTimeSource(new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc)), SequenceOverflowStrategy.SpinWait));
 			var database = new CassandraService(null, cassandraSSl, targetCassandraNodes);
 			database.DatabaseSession.CreateKeyspaceIfNotExists("GabbracoonDB");
