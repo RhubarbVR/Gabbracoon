@@ -103,6 +103,26 @@ namespace Gabbracoon
 			await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
 		}
 
+		public async Task<(TimeSpan, long?)> GetAuthProvidersTimeSpanAndUser(long targetProvider, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT life_time, target_user FROM auth_providers WHERE id = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(targetProvider);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			return (new TimeSpan(result.FirstOrDefault()?.GetValue<long>("life_time") ?? 0), result.FirstOrDefault()?.GetValue<long>("target_user"));
+		}
+
+		public async Task<TimeSpan> GetAuthProvidersTimeSpan(long targetProvider, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT life_time FROM auth_providers WHERE id = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(targetProvider);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			return new TimeSpan(result.FirstOrDefault()?.GetValue<long>("life_time") ?? 0);
+		}
+
 		public async Task<long?> GetAuthProvidersUser(long targetProvider, CancellationToken cancellationToken) {
 			cancellationToken.ThrowIfCancellationRequested();
 			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT target_user FROM auth_providers WHERE id = ?;");
@@ -124,6 +144,17 @@ namespace Gabbracoon
 			return result.FirstOrDefault()?.GetValue<string>("private_data");
 		}
 
+		public async Task<string[]> GetAuthProviderNames(long userId, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT name FROM auth_providers_names WHERE target_user_index = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(userId);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			return result.Select(x => x?.GetValue<string>("name")).ToArray();
+		}
+
+
 		public async Task<long> CreateAccount(string email, string username, CancellationToken cancellationToken) {
 			cancellationToken.ThrowIfCancellationRequested();
 			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO users (id, username, email, player_color, total_bytes, total_used_bytes, has_login) VALUES (?, ?, ?, ?, ?, ?, ?); ");
@@ -136,9 +167,13 @@ namespace Gabbracoon
 			await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
 
 			var newAuthID = _idGen.CreateId();
-			var authPreparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO auth_providers (id, auth_group, target_user, session_key, provider_type) VALUES (?, ?, ?, ?, ?); ");
-			var authBoundStatement = authPreparedStatement.Bind(newAuthID, 0, newUserID, true, "EmailAuth");
+			var authPreparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO auth_providers (id, auth_group, target_user, session_key, provider_type, life_time) VALUES (?, ?, ?, ?, ?, ?); ");
+			var authBoundStatement = authPreparedStatement.Bind(newAuthID, 0, newUserID, true, "EmailAuth", TimeSpan.FromHours(6).Ticks);
 			await _cassandraService.DatabaseSession.ExecuteAsync(authBoundStatement);
+
+			var auth_providers_names_PreparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO auth_providers_names (auth_group, target_user, target_user_index, name) VALUES (?, ?, ?, ?); ");
+			var auth_providers_names_BoundStatement = auth_providers_names_PreparedStatement.Bind(0, newUserID, newUserID, "Email Back Up");
+			await _cassandraService.DatabaseSession.ExecuteAsync(auth_providers_names_BoundStatement);
 
 			return newUserID;
 		}
@@ -182,17 +217,23 @@ namespace Gabbracoon
 
 		public async Task<string> GetNewAuthToken(long targetToken, CancellationToken cancellationToken) {
 			cancellationToken.ThrowIfCancellationRequested();
-			var userID = await GetAuthProvidersUser(targetToken, cancellationToken);
+			var (timeSpan, userID) = await GetAuthProvidersTimeSpanAndUser(targetToken, cancellationToken);
 			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($@"INSERT INTO auth_state (id, target_user, target_provider, roll_key, last_used) VALUES (?, ?, ?, ?, ?); ");
+			cancellationToken.ThrowIfCancellationRequested();
+			var authState = _idGen.CreateId();
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(authState, userID, targetToken, 0, DateTime.UtcNow);
+			await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
 
-			var token = JwtBuilder.Create()
+			return JwtBuilder.Create()
 					  .WithAlgorithm(new RS256Algorithm(_x509CertificateManager.Certificate))
-					  .AddClaim("exp", DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds())
+					  .AddClaim("exp", DateTimeOffset.UtcNow + timeSpan)
 					  .AddClaim("userID", userID)
 					  .AddClaim("rollingID", 0)
 					  .AddClaim("authToken", targetToken)
+					  .AddClaim("authState", authState)
 					  .Encode();
-			return token;
 		}
 	}
 }

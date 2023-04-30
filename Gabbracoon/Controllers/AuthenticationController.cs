@@ -31,7 +31,7 @@ namespace GabbracoonServer.Controllers
 				if (await provider.Authenticate(request, cancellationToken)) {
 					return Ok(new AuthResponse {
 						TargetToken = request.TargetToken,
-						SessionToken = await _userAndAuthService.GetAuthProvidersIsSessionToken(request.TargetToken, cancellationToken) ?? false,
+						SessionToken = await _userAndAuthService.GetAuthProvidersIsSessionToken(request.TargetToken, cancellationToken) ?? true,
 						AuthToken = await _userAndAuthService.GetNewAuthToken(request.TargetToken, cancellationToken),
 					});
 				}
@@ -43,6 +43,7 @@ namespace GabbracoonServer.Controllers
 		[ProducesResponseType(typeof(LocalText), StatusCodes.Status409Conflict)]
 		[ProducesResponseType(typeof(PrivateUserData), StatusCodes.Status202Accepted)]
 		[ProducesResponseType(typeof(MissingAuth), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(string[]), StatusCodes.Status418ImATeapot)]
 		public async Task<IActionResult> Login([FromForm(Name = "Email")] string email, [FromForm(Name = "AuthGroup")] int? authGroup, CancellationToken cancellationToken) {
 			if (email is null || authGroup is null) {
 				return Conflict(new LocalText("Server.Error"));
@@ -51,6 +52,11 @@ namespace GabbracoonServer.Controllers
 			cancellationToken.ThrowIfCancellationRequested();
 			if (findUser is null) {
 				return Conflict(new LocalText("Server.Error"));
+			}
+			if (authGroup < 0) {
+				return new ObjectResult(await _userAndAuthService.GetAuthProviderNames(findUser ?? 0, cancellationToken)) {
+					StatusCode = StatusCodes.Status418ImATeapot
+				};
 			}
 			var authTokens = new Dictionary<long, string>();
 			if (Request.Headers.TryGetValue("RhubarbAuths", out var value)) {

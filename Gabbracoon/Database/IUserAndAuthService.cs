@@ -32,5 +32,8 @@ namespace Gabbracoon
 
 		public Task<long> CreateAccount(string email, string username, CancellationToken cancellationToken);
 		public Task<string> GetNewAuthToken(long targetToken, CancellationToken cancellationToken);
+		Task<TimeSpan> GetAuthProvidersTimeSpan(long targetProvider, CancellationToken cancellationToken);
+		Task<(TimeSpan, long?)> GetAuthProvidersTimeSpanAndUser(long targetProvider, CancellationToken cancellationToken);
+		Task<string[]> GetAuthProviderNames(long userId, CancellationToken cancellationToken);
 	}
 }
