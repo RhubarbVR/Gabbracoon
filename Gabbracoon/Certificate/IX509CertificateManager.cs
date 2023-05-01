@@ -9,8 +9,12 @@ namespace Gabbracoon.Certificate
 {
 	public interface IX509CertificateManager
 	{
-		public string CertificateLocation { get; set; }
+		public string PrivateKeyLocation { set; }
+
+		public string CertificateLocation { set; }
+
 		public X509Certificate2 Certificate { get; }
+
 		public void UpdateCertificate();
 	}
 }

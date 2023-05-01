@@ -30,18 +30,18 @@ namespace GabbracoonServer
 			var targetCassandraNodes = configuration.GetValue<string[]>("targetCassandraNodes") ?? new string[] {
 				"localhost"
 			};
-			var cassandraSSl = configuration.GetValue<bool?>("cassandraSSl") ??false;
+			var cassandraSSl = configuration.GetValue<bool?>("cassandraSSl") ?? false;
 			var emailerName = configuration.GetValue<string>("emailerName");
 			var emailerPassword = configuration.GetValue<string>("emailerPassword");
 			var emailerHost = configuration.GetValue<string>("emailerHost");
 			var emailerPort = configuration.GetValue<int?>("emailerPort") ?? 587;
 			var emailerSsl = configuration.GetValue<bool?>("emailerSsl") ?? true;
-			var permLocation = configuration.GetValue<string>("permLocation") ?? "Gabbracoon.pem";
-
-
+			var certificateLocation = configuration.GetValue<string>("certificateLocation") ?? "Gabbracoon.pem";
+			var privateKeyLocation = configuration.GetValue<string>("privateKeyLocation") ?? "Gabbracoon.key";
 
 			var certificate = new X509CertificateManager {
-				CertificateLocation = permLocation
+				CertificateLocation = certificateLocation,
+				PrivateKeyLocation = privateKeyLocation
 			};
 			certificate.UpdateCertificate();
 			builder.Services.AddSingleton<IX509CertificateManager>(certificate);

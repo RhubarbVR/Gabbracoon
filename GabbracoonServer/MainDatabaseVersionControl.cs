@@ -39,8 +39,8 @@ namespace GabbracoonServer
 					has_login BOOLEAN
 				);");
 
-			database.Execute("CREATE INDEX users_emails ON users ( email );");
-			database.Execute("CREATE INDEX users_usernames ON users ( username );");
+			database.Execute("CREATE INDEX IF NOT EXISTS users_emails ON users ( email );");
+			database.Execute("CREATE INDEX IF NOT EXISTS users_usernames ON users ( username );");
 
 			//target_user_index == target_user   should always be the fucking same
 			database.Execute($@"CREATE TABLE IF NOT EXISTS auth_providers_names (
@@ -51,7 +51,7 @@ namespace GabbracoonServer
 					primary key (auth_group, target_user)
 				);");
 
-			database.Execute("CREATE INDEX auth_providers_names_target_users ON auth_providers_names ( target_user_index );");
+			database.Execute("CREATE INDEX IF NOT EXISTS auth_providers_names_target_users ON auth_providers_names ( target_user_index );");
 
 			database.Execute($@"CREATE TABLE IF NOT EXISTS auth_providers (
 					id BIGINT PRIMARY KEY,
@@ -63,17 +63,17 @@ namespace GabbracoonServer
 					private_data TEXT
 				);");
 
-			database.Execute("CREATE INDEX auth_providers_target_users ON auth_providers ( target_user );");
+			database.Execute("CREATE INDEX IF NOT EXISTS auth_providers_target_users ON auth_providers ( target_user );");
 
 			database.Execute($@"CREATE TABLE IF NOT EXISTS auth_state (
 					id BIGINT PRIMARY KEY,
 					target_user BIGINT,
 					target_provider BIGINT,
 					roll_key BIGINT,
-					last_used TINMESTAMP
+					last_used TIMESTAMP
 				);");
 
-			database.Execute("CREATE INDEX auth_state_target_users ON auth_state ( target_user );");
+			database.Execute("CREATE INDEX IF NOT EXISTS auth_state_target_users ON auth_state ( target_user );");
 
 
 			//target_state_index == target_state   should always be the fucking same
@@ -86,7 +86,7 @@ namespace GabbracoonServer
 					primary key (target_state, user_agent, region_code, ip)
 				);");
 
-			database.Execute("CREATE INDEX auth_info_target_state ON auth_info ( target_state_index );");
+			database.Execute("CREATE INDEX IF NOT EXISTS auth_info_target_state ON auth_info ( target_state_index );");
 
 
 

@@ -43,7 +43,7 @@ namespace GabbracoonServer.Controllers
 		[ProducesResponseType(typeof(LocalText), StatusCodes.Status409Conflict)]
 		[ProducesResponseType(typeof(PrivateUserData), StatusCodes.Status202Accepted)]
 		[ProducesResponseType(typeof(MissingAuth), StatusCodes.Status200OK)]
-		[ProducesResponseType(typeof(string[]), StatusCodes.Status418ImATeapot)]
+		[ProducesResponseType(typeof(string[]), StatusCodes.Status205ResetContent)]
 		public async Task<IActionResult> Login([FromForm(Name = "Email")] string email, [FromForm(Name = "AuthGroup")] int? authGroup, CancellationToken cancellationToken) {
 			if (email is null || authGroup is null) {
 				return Conflict(new LocalText("Server.Error"));
@@ -55,7 +55,7 @@ namespace GabbracoonServer.Controllers
 			}
 			if (authGroup < 0) {
 				return new ObjectResult(await _userAndAuthService.GetAuthProviderNames(findUser ?? 0, cancellationToken)) {
-					StatusCode = StatusCodes.Status418ImATeapot
+					StatusCode = StatusCodes.Status205ResetContent
 				};
 			}
 			var authTokens = new Dictionary<long, string>();

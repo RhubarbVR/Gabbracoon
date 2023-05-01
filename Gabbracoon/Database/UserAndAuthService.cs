@@ -223,7 +223,7 @@ namespace Gabbracoon
 			cancellationToken.ThrowIfCancellationRequested();
 			var authState = _idGen.CreateId();
 			cancellationToken.ThrowIfCancellationRequested();
-			var boundStatement = preparedStatement.Bind(authState, userID, targetToken, 0, DateTime.UtcNow);
+			var boundStatement = preparedStatement.Bind(authState, userID, targetToken, 0L, DateTime.UtcNow);
 			await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
 
 			return JwtBuilder.Create()

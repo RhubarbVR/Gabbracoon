@@ -1,48 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gabbracoon.Certificate
 {
 	public sealed class X509CertificateManager : IX509CertificateManager
 	{
-
+		private static string KeyPassword => Environment.GetEnvironmentVariable("CERT_KEY_PASSWORD") ?? "ChangeME";
 		public X509Certificate2 Certificate { get; private set; }
 		public string CertificateLocation { get; set; } = "Gabbracoon.pem";
+		public string PrivateKeyLocation { get; set; } = "Gabbracoon.key";
 		public string Location => Path.GetFullPath(Path.Combine(".", CertificateLocation));
+		public string KeyLocation => Path.GetFullPath(Path.Combine(".", PrivateKeyLocation));
 
 		public void UpdateCertificate() {
-			if (!File.Exists(Location)) {
-				Certificate = GenerateCertificate();
-				File.WriteAllText(Location, ExportToPEM(Certificate));
-				Console.WriteLine($"Made permFile {Location}");
+			if(KeyPassword == "ChangeME") {
+				Console.WriteLine("Change CERT_KEY_PASSWORD Environment var");
 			}
-			else {
-				Console.WriteLine($"Loaded permFile");
-				Certificate = new X509Certificate2(Location);
+			if (!File.Exists(Location) || !File.Exists(KeyLocation)) {
+				GenerateCertificate();
 			}
+			Console.WriteLine($"Loaded certFile and keyFile");
+			Certificate = new X509Certificate2(File.ReadAllBytes(Location), KeyPassword);
+			var rsaKey = RSA.Create();
+			rsaKey.ImportEncryptedPkcs8PrivateKey(KeyPassword, File.ReadAllBytes(PrivateKeyLocation), out _);
+			Certificate = Certificate.CopyWithPrivateKey(rsaKey);
 		}
 
-		private static string ExportToPEM(X509Certificate cert) {
-			var builder = new StringBuilder();
-			builder.AppendLine("-----BEGIN CERTIFICATE-----");
-			builder.AppendLine(Convert.ToBase64String(cert.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks));
-			builder.AppendLine("-----END CERTIFICATE-----");
-			return builder.ToString();
-		}
-
-		private static X509Certificate2 GenerateCertificate() {
+		private void GenerateCertificate() {
 			var subjectName = "Gabbracoon-Cert";
-			var certRequest = new CertificateRequest($"CN={subjectName}", ECDsa.Create(), HashAlgorithmName.SHA256);
+			var certRequest = new CertificateRequest($"CN={subjectName}", RSA.Create(4096), HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
 			certRequest.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature, true));
 			var generatedCert = certRequest.CreateSelfSigned(DateTimeOffset.Now.AddDays(-2), DateTimeOffset.Now.AddYears(10));
-			var pfxGeneratedCert = new X509Certificate2(generatedCert.Export(X509ContentType.Pfx));
-			return pfxGeneratedCert;
+			File.WriteAllBytes(PrivateKeyLocation, generatedCert.GetRSAPrivateKey().ExportEncryptedPkcs8PrivateKey(KeyPassword, new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA512, 100000)));
+			File.WriteAllBytes(CertificateLocation, generatedCert.Export(X509ContentType.Cert, KeyPassword));
+			Console.WriteLine($"Made certFile and keyFile");
+			generatedCert.Dispose();
 		}
 	}
 }
