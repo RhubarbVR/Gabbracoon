@@ -5,15 +5,17 @@ VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GabbracoonServer", "GabbracoonServer\GabbracoonServer.csproj", "{A3CDF3E1-7AA0-418B-82A2-2DA361505952}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gabbracoon", "Gabbracoon\Gabbracoon.csproj", "{E3C3CC36-DA28-4700-ACF6-8A228043846C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gabbracoon", "Gabbracoon\Gabbracoon.csproj", "{E3C3CC36-DA28-4700-ACF6-8A228043846C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Features", "Features", "{4A6E9483-D86A-4EFB-9CD7-546E3B31CF61}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PasswordAuth", "Features\PasswordAuth\PasswordAuth.csproj", "{E306AF93-45A0-4877-A0DF-1099CD8CD19F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PasswordAuth", "Features\PasswordAuth\PasswordAuth.csproj", "{E306AF93-45A0-4877-A0DF-1099CD8CD19F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OAuth", "Features\OAuth\OAuth.csproj", "{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestModels", "RequestModels\RequestModels.csproj", "{9270AE82-23D4-48A3-9095-997F34A4E6C9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{0103A495-DCF3-4693-A118-D89E29D2A36E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

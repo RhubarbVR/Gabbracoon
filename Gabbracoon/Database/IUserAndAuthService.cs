@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Http;
+
 using RequestModels;
 
 namespace Gabbracoon
@@ -17,7 +19,7 @@ namespace Gabbracoon
 		public Task<long?> GetAuthProvidersUser(long targetProvider, CancellationToken cancellationToken);
 
 		public Task SetAuthProvidersPrivateData(long targetProvider, string newValue, CancellationToken cancellationToken);
-		
+
 		public Task<string> GetAuthProvidersPrivateData(long targetProvider, CancellationToken cancellationToken);
 
 		public Task MarkUserHasLogin(long id, CancellationToken cancellationToken);
@@ -32,8 +34,9 @@ namespace Gabbracoon
 
 		public Task<long> CreateAccount(string email, string username, CancellationToken cancellationToken);
 		public Task<string> GetNewAuthToken(long targetToken, CancellationToken cancellationToken);
-		Task<TimeSpan> GetAuthProvidersTimeSpan(long targetProvider, CancellationToken cancellationToken);
-		Task<(TimeSpan, long?)> GetAuthProvidersTimeSpanAndUser(long targetProvider, CancellationToken cancellationToken);
-		Task<string[]> GetAuthProviderNames(long userId, CancellationToken cancellationToken);
+		public Task<TimeSpan> GetAuthProvidersTimeSpan(long targetProvider, CancellationToken cancellationToken);
+		public Task<(TimeSpan, long?)> GetAuthProvidersTimeSpanAndUser(long targetProvider, CancellationToken cancellationToken);
+		public Task<string[]> GetAuthProviderNames(long userId, CancellationToken cancellationToken);
+		public Task<(bool, long)> ValidateAuth(long targetToken, long? findUser, string token, HttpRequest request, CancellationToken cancellationToken);
 	}
 }

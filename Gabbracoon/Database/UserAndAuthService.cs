@@ -12,8 +12,13 @@ using Gabbracoon.Certificate;
 
 using IdGen;
 
+using JWT;
 using JWT.Algorithms;
 using JWT.Builder;
+
+using Microsoft.AspNetCore.Http;
+
+using Newtonsoft.Json.Linq;
 
 using RequestModels;
 
@@ -228,12 +233,85 @@ namespace Gabbracoon
 
 			return JwtBuilder.Create()
 					  .WithAlgorithm(new RS256Algorithm(_x509CertificateManager.Certificate))
-					  .AddClaim("exp", DateTimeOffset.UtcNow + timeSpan)
-					  .AddClaim("userID", userID)
-					  .AddClaim("rollingID", 0)
-					  .AddClaim("authToken", targetToken)
-					  .AddClaim("authState", authState)
+					  .AddClaim("exp", Convert.ToBase64String(BitConverter.GetBytes((DateTime.UtcNow + timeSpan).Ticks)))
+					  .AddClaim("userID", Convert.ToBase64String(BitConverter.GetBytes(userID ?? 0)))
+					  .AddClaim("rollingID", Convert.ToBase64String(BitConverter.GetBytes(0L)))
+					  .AddClaim("authToken", Convert.ToBase64String(BitConverter.GetBytes(targetToken)))
+					  .AddClaim("authState", Convert.ToBase64String(BitConverter.GetBytes(authState)))
 					  .Encode();
+		}
+
+		public async Task<(bool, long)> ValidateAuth(long targetToken, long? findUser, string token, HttpRequest request, CancellationToken cancellationToken) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var info = JObject.Parse(JwtBuilder.Create()
+						.WithAlgorithm(new RS256Algorithm(_x509CertificateManager.Certificate))
+						.Decode(token));
+			cancellationToken.ThrowIfCancellationRequested();
+			DateTime? exp = null;
+			long? authToken = null;
+			long? authState = null;
+			long? userID = null;
+			long? rollingID = null;
+			if (info.TryGetValue("exp", out var expToken)) {
+				exp = new DateTime(BitConverter.ToInt64(Convert.FromBase64String((string)expToken)));
+			}
+			if (info.TryGetValue("authToken", out var authTokenToken)) {
+				authToken = BitConverter.ToInt64(Convert.FromBase64String((string)authTokenToken));
+			}
+			if (info.TryGetValue("authState", out var authStateToken)) {
+				authState = BitConverter.ToInt64(Convert.FromBase64String((string)authStateToken));
+			}
+			if (info.TryGetValue("userID", out var userIDToken)) {
+				userID = BitConverter.ToInt64(Convert.FromBase64String((string)userIDToken));
+			}
+			if (info.TryGetValue("rollingID", out var rollingIDToken)) {
+				rollingID = BitConverter.ToInt64(Convert.FromBase64String((string)rollingIDToken));
+			}
+			cancellationToken.ThrowIfCancellationRequested();
+			if (exp is null || authToken is null || authState is null || userID is null || rollingID is null) {
+				return (false, 0);
+			}
+			if (DateTime.UtcNow > exp.Value) {
+				return (false, 0);
+			}
+			if (findUser is not null) {
+				if (findUser != userID) {
+					return (false, 0);
+				}
+			}
+			if(targetToken != authToken) {
+				return (false, 0);
+			}
+			cancellationToken.ThrowIfCancellationRequested();
+			var preparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"SELECT roll_key FROM auth_state WHERE id = ?;");
+			cancellationToken.ThrowIfCancellationRequested();
+			var boundStatement = preparedStatement.Bind(authToken);
+			cancellationToken.ThrowIfCancellationRequested();
+			var result = await _cassandraService.DatabaseSession.ExecuteAsync(boundStatement);
+			var rollId = result.FirstOrDefault()?.GetValue<long>("roll_key");
+			if (rollId is null) {
+				return (false, 0);
+			}
+
+			var auth_info_PreparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"INSERT INTO auth_info (target_state_index, target_state, user_agent, region_code, ip) VALUES (?, ?, ?, ?, ?);");
+			var auth_info_BoundStatement = auth_info_PreparedStatement.Bind(authState ?? 0L, authState ?? 0L, request.Headers["User-Agent"].ToString(), request.Headers["User-Agent"].ToString(), request.HttpContext.Connection.RemoteIpAddress.ToString());
+			await _cassandraService.DatabaseSession.ExecuteAsync(auth_info_BoundStatement);
+
+			if (rollId != rollingID) {
+				// Set roll_key to -1 to lock all users out
+				if (rollingID != -1) {
+					var roll_keyPreparedStatement = await _cassandraService.DatabaseSession.PrepareAsync($"INSERT INTO auth_state (id, roll_key) VALUES (?, ?);");
+					var roll_keyBoundStatement = roll_keyPreparedStatement.Bind(authToken, -1L);
+					await _cassandraService.DatabaseSession.ExecuteAsync(roll_keyBoundStatement);
+				}
+
+				return (false, 0);
+			}
+
+
+
+			return (true, 0);
+
 		}
 	}
 }

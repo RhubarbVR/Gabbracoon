@@ -18,7 +18,7 @@ namespace GabbracoonServer.Controllers
 		private readonly Dictionary<string, IGabbracoonAuthProvider> _authProviders = new();
 		private readonly IUserAndAuthService _userAndAuthService;
 
-		public AuthenticationController(IEnumerable<Gabbracoon.IGabbracoonAuthProvider> authProviders, IUserAndAuthService userAndAuthService) {
+		public AuthenticationController(IEnumerable<IGabbracoonAuthProvider> authProviders, IUserAndAuthService userAndAuthService) {
 			_authProviders = authProviders.ToDictionary((x) => x.Name);
 			_userAndAuthService = userAndAuthService;
 		}
@@ -42,8 +42,8 @@ namespace GabbracoonServer.Controllers
 		[HttpPost(nameof(Login))]
 		[ProducesResponseType(typeof(LocalText), StatusCodes.Status409Conflict)]
 		[ProducesResponseType(typeof(PrivateUserData), StatusCodes.Status202Accepted)]
-		[ProducesResponseType(typeof(MissingAuth), StatusCodes.Status200OK)]
-		[ProducesResponseType(typeof(string[]), StatusCodes.Status205ResetContent)]
+		[ProducesResponseType(typeof(MissingAuth), StatusCodes.Status100Continue)]
+		[ProducesResponseType(typeof(string[]), StatusCodes.Status200OK)]
 		public async Task<IActionResult> Login([FromForm(Name = "Email")] string email, [FromForm(Name = "AuthGroup")] int? authGroup, CancellationToken cancellationToken) {
 			if (email is null || authGroup is null) {
 				return Conflict(new LocalText("Server.Error"));
@@ -55,7 +55,7 @@ namespace GabbracoonServer.Controllers
 			}
 			if (authGroup < 0) {
 				return new ObjectResult(await _userAndAuthService.GetAuthProviderNames(findUser ?? 0, cancellationToken)) {
-					StatusCode = StatusCodes.Status205ResetContent
+					StatusCode = StatusCodes.Status200OK
 				};
 			}
 			var authTokens = new Dictionary<long, string>();
@@ -63,7 +63,7 @@ namespace GabbracoonServer.Controllers
 				authTokens = value.ToDictionary((inputString) => long.Parse(inputString.Remove(inputString.IndexOf(' '))));
 			}
 			MissingAuth authProviders = null;
-			var hadToken = false;
+			var login = false;
 			await foreach (var auth in _userAndAuthService.GetAuths(findUser ?? 0, cancellationToken)) {
 				if (auth.group != authGroup) {
 					if (authTokens.ContainsKey(auth.auth.TargetToken)) {
@@ -73,16 +73,17 @@ namespace GabbracoonServer.Controllers
 				}
 				else {
 					if (authTokens.TryGetValue(auth.auth.TargetToken, out var token)) {
-						hadToken = true;
-						//verify Token then continue
-						continue;
+						if ((await _userAndAuthService.ValidateAuth(auth.auth.TargetToken, findUser, token, Request, cancellationToken)).Item1) {
+							login = true;
+							continue;
+						}
 					}
 				}
 				authProviders ??= auth.auth;
 			}
 			cancellationToken.ThrowIfCancellationRequested();
 			if (authProviders is null) {
-				if (hadToken) {
+				if (login) {
 					var (user, hasLogin) = await _userAndAuthService.GetUser(findUser ?? 0, cancellationToken);
 					if (!hasLogin) {
 						//Todo call userData load on fetures
@@ -95,7 +96,7 @@ namespace GabbracoonServer.Controllers
 			if (_authProviders.TryGetValue(authProviders.AuthProviderType, out var provider)) {
 				await provider.RequestAuthenticate(authProviders.TargetToken, cancellationToken);
 				Console.WriteLine($"Code {authProviders.TargetToken}");
-				return Ok(authProviders);
+				return new ObjectResult(authProviders) { StatusCode = StatusCodes.Status100Continue };
 			}
 			else {
 				return Conflict(new LocalText("Server.Error"));
