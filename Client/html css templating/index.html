@@ -1,20 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Responsive Sidebar</title>
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
-</head>
-<body>
-<div class="sidebar">
-  <ul>
-    <li><button class="icon-btn"><i class="fas fa-home"></i></button></li>
-    <li><button class="icon-btn"><i class="fas fa-user"></i></button></li>
-    <li><button class="icon-btn"><i class="fas fa-envelope"></i></button></li>
-    <li><button class="icon-btn"><i class="fas fa-cog"></i></button></li>
-  </ul>
-</div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Responsive Sidebar</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="sidebar">
+      <ul>
+        <li>
+          <button class="icon-btn"><i class="fas fa-home"></i></button>
+        </li>
+        <li>
+          <button class="icon-btn"><i class="fas fa-user"></i></button>
+        </li>
+        <li>
+          <button class="icon-btn"><i class="fas fa-envelope"></i></button>
+        </li>
+        <li>
+          <button class="icon-btn selected"><i class="fas fa-cog"></i></button>
+        </li>
+      </ul>
+    </div>
+    <div class="main-pannel">
+      <!-- Chat inbox  -->
+        <div class="chats">
+          <!-- Message container -->
+          <div class="msg-page">
+            <!-- Incoming messages -->
+
+            <div class="received-chats">
+              <div class="received-chats-img">
+                <img
+                  src="https://cdn.discordapp.com/avatars/316545903718694913/d6d3be103051b0aa698d6abc61614322.webp?size=240"
+                />
+              </div>
+              <div class="received-msg">
+                <div class="received-msg-inbox">
+                  <p>I Am jeana</p>
+                  <span class="time">18:06 PM | July 24 </span>
+                </div>
+              </div>
+            </div>
+            <!-- Outgoing messages -->
+            <div class="outgoing-chats">
+              <div class="outgoing-chats-img">
+                <img
+                  src="https://cdn.discordapp.com/avatars/295423461965168662/583396170eaa482468a4e2c96ad3fbd5.webp?size=240"
+                />
+              </div>
+              <div class="outgoing-msg">
+                <div class="outgoing-chats-msg">
+                  <p class="multi-msg">I am Faolan</p>
+                  <p class="multi-msg">So hi</p>
+
+                  <span class="time">18:30 PM | July 24 </span>
+                </div>
+              </div>
+            </div>
+            <div class="received-chats">
+              <div class="received-chats-img">
+                <img
+                  src="https://cdn.discordapp.com/avatars/316545903718694913/d6d3be103051b0aa698d6abc61614322.webp?size=240"
+                />
+              </div>
+              <div class="received-msg">
+                <div class="received-msg-inbox">
+                  <p class="single-msg">
+                    I really like sending really long messages that will fill
+                    hole screen or maybe not i just need to type a lot into a
+                    msg and see where it goes Lorem ipsum dolor sit amet
+                    consectetur adipisicing elit. Velit, sequi.Lorem ipsum dolor
+                    sit amet consectetur adipisicing elit. Velit, sequi.Lorem
+                    ipsum dolor sit amet consectetur adipisicing elit. Velit,
+                    sequi.
+                  </p>
+                  <span class="time">18:31 PM | July 24 </span>
+                </div>
+              </div>
+            </div>
+            <div class="outgoing-chats">
+              <div class="outgoing-chats-img">
+                <img
+                  src="https://cdn.discordapp.com/avatars/295423461965168662/583396170eaa482468a4e2c96ad3fbd5.webp?size=240"
+                />
+              </div>
+              <div class="outgoing-msg">
+                <div class="outgoing-chats-msg">
+                  <p>
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                    Velit, sequi.
+                  </p>
+
+                  <span class="time">18:34 PM | July 24 </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </body>
 </html>
