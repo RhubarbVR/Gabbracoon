@@ -88,7 +88,10 @@ namespace GabbracoonServer
 
 			database.Execute("CREATE INDEX IF NOT EXISTS auth_info_target_state ON auth_info ( target_state_index );");
 
-
+			database.Execute($@"CREATE TABLE IF NOT EXISTS username_discriminator (
+					id TEXT PRIMARY KEY,
+					current_amount BIGINT
+				);");
 
 		}
 	}

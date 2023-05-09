@@ -2,11 +2,13 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="AnyAscii" Version="0.3.2" />
 		<PackageReference Include="CassandraCSharpDriver" Version="3.19.2" />
 		<PackageReference Include="IdGen" Version="3.0.3" />
 		<PackageReference Include="IdGen.DependencyInjection" Version="3.0.0" />
