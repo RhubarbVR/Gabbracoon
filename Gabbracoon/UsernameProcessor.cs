@@ -66,7 +66,9 @@ namespace Gabbracoon
 			foreach (var c in normalized) {
 				var uc = CharUnicodeInfo.GetUnicodeCategory(c);
 				if (uc == UnicodeCategory.Format) {
-					return "";
+					if(c != '‍') {
+						return "";
+					}
 				}
 				if (uc is not UnicodeCategory.ModifierLetter and not UnicodeCategory.ModifierLetter and not UnicodeCategory.NonSpacingMark and not UnicodeCategory.Control and not UnicodeCategory.EnclosingMark and not UnicodeCategory.SpacingCombiningMark) {
 					newString.Append(c);

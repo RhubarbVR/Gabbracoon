@@ -90,6 +90,17 @@ namespace Gabbracoon.Tests
 			Console.WriteLine(TestUsername("​"));
 			Console.WriteLine(TestUsername("​"));
 			Console.WriteLine(TestUsername("$$b"));
+			Console.WriteLine(TestUsername("🏳️‍⚧️"));
+			Console.WriteLine(TestUsername("🏳️‍🌈"));
+			Console.WriteLine(TestUsername("🇨🇦"));
+			Console.WriteLine(TestUsername("$"));
+			Console.WriteLine(TestUsername("_"));
+			Console.WriteLine(TestUsername("="));
+			Console.WriteLine(TestUsername("?"));
+			Console.WriteLine(TestUsername("j      e       a      n       a"));
+			Console.WriteLine(TestUsername("==bob"));
+			Console.WriteLine(TestUsername("==bob=="));
+			Console.WriteLine(TestUsername(""));
 		}
 
 
