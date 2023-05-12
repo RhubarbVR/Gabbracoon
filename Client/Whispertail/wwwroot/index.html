@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Whispertail</title>
+    <base href="/" />
+    <link href="/_content/Whispertail_Shared/css/app.css" rel="stylesheet" />
+    <link href="Whispertail.styles.css" rel="stylesheet" />
+    <script>
+        function UpdateTheme(lightMode) {
+            var link = document.getElementById('theme');
+            if (lightMode) {-
+                DarkReader.disable();
+            } else {
+                DarkReader.enable({
+                    brightness: 100,
+                    contrast: 90,
+                    sepia: 10
+                });
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="status-bar-safe-area"></div>
+
+    <div id="app">
+        <div class='LoadingCube-container'>
+            <div class='cube'>
+                <div class='front'></div>
+                <div class='back'></div>
+                <div class='right'></div>
+                <div class='left'></div>
+                <div class='top'></div>
+                <div class='bottom'></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+    <script src="_content/Whispertail_Shared/darkreader.js"></script>
+
+</body>
+
+</html>
