@@ -13,10 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\GabbracoonClient\RequestModels\RequestModels.csproj" />
     <ProjectReference Include="..\Features\OAuth\OAuth.csproj" />
     <ProjectReference Include="..\Features\PasswordAuth\PasswordAuth.csproj" />
     <ProjectReference Include="..\Gabbracoon\Gabbracoon.csproj" />
-    <ProjectReference Include="..\RequestModels\RequestModels.csproj" />
   </ItemGroup>
 
 </Project>

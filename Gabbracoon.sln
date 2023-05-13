@@ -13,11 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PasswordAuth", "Features\Pa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OAuth", "Features\OAuth\OAuth.csproj", "{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestModels", "RequestModels\RequestModels.csproj", "{9270AE82-23D4-48A3-9095-997F34A4E6C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GabbracoonTests", "GabbracoonTests\GabbracoonTests.csproj", "{266CB3D5-D678-49AB-86CB-CEC0AA427518}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{0103A495-DCF3-4693-A118-D89E29D2A36E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GabbracoonTests", "GabbracoonTests\GabbracoonTests.csproj", "{266CB3D5-D678-49AB-86CB-CEC0AA427518}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestModels", "..\GabbracoonClient\RequestModels\RequestModels.csproj", "{5D11AD7C-2391-4005-BDED-A23996F78004}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,14 +39,14 @@ Global
 		{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A2DA439-EA64-457B-BEA7-7525CCBB99F6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9270AE82-23D4-48A3-9095-997F34A4E6C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9270AE82-23D4-48A3-9095-997F34A4E6C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9270AE82-23D4-48A3-9095-997F34A4E6C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9270AE82-23D4-48A3-9095-997F34A4E6C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{266CB3D5-D678-49AB-86CB-CEC0AA427518}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{266CB3D5-D678-49AB-86CB-CEC0AA427518}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{266CB3D5-D678-49AB-86CB-CEC0AA427518}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{266CB3D5-D678-49AB-86CB-CEC0AA427518}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D11AD7C-2391-4005-BDED-A23996F78004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D11AD7C-2391-4005-BDED-A23996F78004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D11AD7C-2391-4005-BDED-A23996F78004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D11AD7C-2391-4005-BDED-A23996F78004}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
