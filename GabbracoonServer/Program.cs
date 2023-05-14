@@ -98,6 +98,7 @@ namespace GabbracoonServer
 				feature.LoadBuilder(builder);
 			}
 
+			builder.Services.AddCors();
 			var health = builder.Services.AddHealthChecks()
 				.AddCheck("Database", database);
 
@@ -109,7 +110,7 @@ namespace GabbracoonServer
 
 			app.UseSwagger();
 			app.UseSwaggerUI();
-			app.MapHealthChecks("/health");
+			app.MapHealthChecks("/gabbracoon_health");
 			app.MapControllers();
 
 			foreach (var feature in features) {
@@ -117,6 +118,27 @@ namespace GabbracoonServer
 			}
 
 			GabbracoonController._featuresList = features.Select(x => x.Name).ToArray();
+
+
+			app.UseCors(x => x
+					.AllowAnyHeader()
+					.AllowAnyMethod()
+					.WithOrigins(
+						"http://whispertail.net",
+						"https://whispertail.net",
+						"http://whispertail.com",
+						"https://whispertail.com",
+						"https://0.0.0.0",
+						"http://0.0.0.0",
+						"http://localhost",
+						"https://localhost",
+						"http://localhost:59345",
+						"https://localhost:59345",
+						"http://localhost:5269",
+						"https://localhost:5269",
+						"http://127.0.0.1:5500",
+						"https://127.0.0.1:5500"
+					));
 
 			app.Run();
 		}
