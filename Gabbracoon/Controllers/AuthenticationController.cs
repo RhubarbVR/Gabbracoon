@@ -44,28 +44,28 @@ namespace GabbracoonServer.Controllers
 		[ProducesResponseType(typeof(PrivateUserData), StatusCodes.Status202Accepted)]
 		[ProducesResponseType(typeof(MissingAuth), StatusCodes.Status100Continue)]
 		[ProducesResponseType(typeof(string[]), StatusCodes.Status200OK)]
-		public async Task<IActionResult> Login([FromForm(Name = "Email")] string email, [FromForm(Name = "AuthGroup")] int? authGroup, CancellationToken cancellationToken) {
-			if (email is null || authGroup is null) {
+		public async Task<IActionResult> Login(LoginAccount loginAccount, CancellationToken cancellationToken) {
+			if (loginAccount?.Email is null) {
 				return Conflict(new LocalText("Server.Error"));
 			}
-			var findUser = await _userAndAuthService.GetUserIDFromEmail(email, cancellationToken);
+			var findUser = await _userAndAuthService.GetUserIDFromEmail(loginAccount.Email, cancellationToken);
 			cancellationToken.ThrowIfCancellationRequested();
 			if (findUser is null) {
 				return Conflict(new LocalText("Server.Error"));
 			}
-			if (authGroup < 0) {
+			if (loginAccount.AuthGroup < 0) {
 				return new ObjectResult(await _userAndAuthService.GetAuthProviderNames(findUser ?? 0, cancellationToken)) {
 					StatusCode = StatusCodes.Status200OK
 				};
 			}
 			var authTokens = new Dictionary<long, string>();
-			if (Request.Headers.TryGetValue("RhubarbAuths", out var value)) {
+			if (Request.Headers.TryGetValue("GabbraAuths", out var value)) {
 				authTokens = value.ToDictionary((inputString) => long.Parse(inputString.Remove(inputString.IndexOf(' '))));
 			}
 			MissingAuth authProviders = null;
 			var login = false;
 			await foreach (var auth in _userAndAuthService.GetAuths(findUser ?? 0, cancellationToken)) {
-				if (auth.group != authGroup) {
+				if (auth.group != loginAccount.AuthGroup) {
 					if (authTokens.ContainsKey(auth.auth.TargetToken)) {
 						return Conflict(new LocalText("Server.Error.DullLogin"));
 					}
